@@ -1,0 +1,1102 @@
+% Cost of Mastitis in Canada
+%% Author: Denis Haine
+%% Date: 20170502
+%% To compile:
+%%  Rscript -e "library(knitr); knit('file.Rnw')"
+%%  Rscript -e ``library(knitr); knit('file.Rnw', tangle = TRUE)''
+%%  pdflatex file.tex
+%%  bibtex file
+%%  pdflatex file.tex
+%%  pdflatex file.tex
+%%===============================================================
+\documentclass{article}\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\usepackage{Sweavel}
+
+
+\usepackage[square,numbers]{natbib}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french,english]{babel}
+\usepackage{graphicx}
+\usepackage{relsize}
+\usepackage{moreverb}
+\usepackage{fancyhdr}
+\usepackage{url}
+\usepackage{chngpage}
+\usepackage{microtype}
+\usepackage{xspace}
+\usepackage{lscape}
+\usepackage{booktabs}
+\usepackage{lastpage}
+\usepackage{paralist}
+\usepackage{siunitx}
+\usepackage{longtable}
+\usepackage{xfrac}
+\usepackage[super]{nth}  % to generate English ordinal numbers
+
+\def\titl{Cost of Mastitis in Canadian Dairies}
+\definecolor{myorange}{cmyk}{0,0.631,0.892,0.204}
+\definecolor{darkblue}{RGB}{0,0,139}
+\def\linkcol{darkblue}
+
+\usepackage[pdftex,hidelinks,bookmarks,pagebackref,pdfpagemode=UseOutlines,
+colorlinks,linkcolor=\linkcol,
+pdfauthor={Denis Haine},
+pdftitle={\titl}]{hyperref}
+
+\graphicspath{{graphics/}}
+
+\newcommand{\ra}[1]{\renewcommand{\arraystretch}{#1}}
+
+\newcommand{\code}[1]{\texttt{\smaller #1}}
+\newcommand{\R}{{\normalfont\textsf{R}}{}}
+
+\textwidth 6in
+\textheight 9in
+\topmargin -.5in
+\oddsidemargin -.1in
+\evensidemargin -.1in
+
+\newcommand{\st}{\textsuperscript{st}\xspace}
+\newcommand{\nd}{\textsuperscript{nd}\xspace}
+\newcommand{\rd}{\textsuperscript{rd}\xspace}
+\renewcommand{\th}{\textsuperscript{th}\xspace}
+
+\newcommand{\sq}{\textsuperscript{2}\xspace}
+
+\author{Denis Haine}
+\title{\textcolor{myorange}{\titl}}
+\date{\today}
+\pagestyle{fancy}
+\renewcommand{\subsectionmark}[1]{}  % suppress subsection title in headers
+
+\begin{document}
+\maketitle
+% \tableofcontents
+% \listoffigures
+\listoftables
+\clearpage
+\rhead{\scriptsize CoMaCAN \\
+  \today}
+
+
+
+%------------------
+\def\inclcode{1}
+
+
+\section{Material \& Methods}
+
+A cross-sectional study, described in \citet{aghamohammadi_2018}, was conducted
+to collect data on factors having an impact on mastitis costs (current expenditures
+for mastitis treatment and control, and mastitis-associated output losses).
+Data were collected with the help of a questionnaire consisting of 35 open-ended
+and multiple-choice questions, mailed in January 2016 to the 374 dairy producers
+participating in the second phase of the Canadian National Dairy
+Study~\cite{BELAGE20173839}.
+The 374 farms were selected to reflect the proportion of producers by province
+and of DHI-participating herds according to the official records from the
+provincial dairy boards (British Columbia, n = 20; Alberta, n = 20;
+Saskatchewan, n = 10; Manitoba, n = 10; Ontario, n = 133; Québec, n = 121;
+New-Brunswick, n = 17, Nova-Scotia, n = 18; Prince Edward Island, n = 20, and
+Newfoundland; n = 5).
+More details can be found in \citet{aghamohammadi_2018}, along with the mastitis
+economic model used, based on the framework proposed by \citet{Halasa_2007}.
+
+Based on data collected from these 374 herds, probability distributions of the
+various economic model parameters were fit by maximum likelihood
+estimation~\cite{JSSv064i04}.
+Empirical plots, descriptive statistics, as well as skewness and kurtosis
+plots (i.e.\ Cullen and Frey graph, \citealp{Cullen_Frey_1999}) were used to
+determine the best distributions for each parameter.
+In order to take into account the uncertainty of the estimated values of
+kurtosis and skewness from data, a nonparametric bootstrap
+procedure~\cite{Efron_Tibshirani_1994} was performed to obtain boot values of
+skewness and kurtosis.
+List of parameters and fitted distributions are given in Table~\ref{tab:fitted}.
+
+\begin{table}[ht]
+{\footnotesize
+\caption{Fitted distribution for economic model parameters.\label{tab:fitted}} 
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Parameter & Distribution & Parameters\tabularnewline
+\midrule
+Milk samples cost for SCM & Gamma & Shape = 0.1; rate = 0.0004 \tabularnewline
+Incidence of CM & Exponential & Rate = 0.04 \tabularnewline
+Proportion of CM receiving treatment & Beta & \(\alpha\) = 0.44; \(\beta\) = 0.18 \tabularnewline
+Drug price & Gamma & Shape = 3.27; rate = 0.13 \tabularnewline
+Proportion of clinical mastitis seen by a vet & Beta & \(\alpha\) = 0.2; \(\beta\) = 3.47 \tabularnewline
+Veterinary fees for CM & Log-normal & \(\mu\) = 4.6; \(\sigma\) = 0.41 \tabularnewline
+Labour time per CM case & Gamma & Shape = 0.15; rate = 0.8 \tabularnewline
+Milk samples cost for CM & Gamma & Shape = 0.24; rate = 0.001 \tabularnewline
+Cost of veterinary advices (udder health) & Gamma & Shape = 0.06; rate = 0.0002 \tabularnewline
+Insurance & Gamma & Shape = 0.12; rate = 0.0009 \tabularnewline
+Proportion of L1 culled due to CM & Beta & \(\alpha\) = 0.22; \(\beta\) = 15.6 \tabularnewline
+Proportion of L1 dead due to CM & Beta & \(\alpha\) = 0.05; \(\beta\) = 20 \tabularnewline
+Proportion of L2+ culled due to CM & Beta & \(\alpha\) = 0.83; \(\beta\) = 17.5 \tabularnewline
+Proportion of L2+ dead due to CM & Beta & \(\alpha\) = 0.26; \(\beta\) = 46.4 \tabularnewline
+Rearing costs & Normal & Mean = 2450; SD = 450 \tabularnewline
+Meat value for CM & Logistic & Location = 1109; scale = 165 \tabularnewline
+Salvage value & Gamma & Shape = 0.25; rate = 0.01 \tabularnewline
+Proportion of L1 culled due to SCM & Beta & \(\alpha\) = 0.21; \(\beta\) = 15 \tabularnewline
+Proportion of L2+ culled due to SCM & Beta & \(\alpha\) = 0.93; \(\beta\) = 19 \tabularnewline
+Meat value for SCC & Log-normal & \(\mu\) = 6.8; \(\sigma\) = 1.3 \tabularnewline
+Pre-milking teat disinfection cost & Exponential & Rate = 0.0008 \tabularnewline
+Post-milking teat disinfection cost & Gamma & Shape = 1.79; rate = 0.0009 \tabularnewline
+DCT cost & Gamma & Shape = 1.12; rate = 0.0006 \tabularnewline
+Gloves cost & Exponential & Rate = 0.004 \tabularnewline 
+Vaccines cost & Gamma & Shape = 0.26; rate = 0.0006 \tabularnewline
+Treatment time & Gamma & Shape = 5.9; rate = 1.82 \tabularnewline
+Drug withdrawal time & Normal & Mean = 3.2; SD = 0.6 \tabularnewline
+Proportion of cows excluded from bulktank due to high SCC & Beta & \(\alpha\) = 0.17; \(\beta\) = 2.21 \tabularnewline
+Number of days before milk is put back in milk tank & Gamma & Shape = 0.6; rate = 0.23 \tabularnewline
+Proportion of milk fed to calves & Beta & \(\alpha\) = 0.17; \(\beta\) = 0.26 \tabularnewline
+Number of days out of bulktank due to SCM & Negative binomial & Size = 0.19; \(\mu\) = 30.26 \tabularnewline
+\bottomrule
+\end{tabular}\end{center}}
+\end{table}
+
+The economic model described in \cite{aghamohammadi_2018} was applied to 2014
+data of DHI-participating herds (N = 8902), with the parameters and their fitted
+distributions.
+A total of 1000 data sets were simulated.
+For each data set, a stratified random sampling without replacement was used to
+fill data for herds not participating into DHI, i.e. for which no data were
+available.
+Number of participating and non-participating DHI herds are given in
+Table~\ref{tab:dhi}, together with the random samples added.
+Median values, 2.5 and 97.5 percentiles are then provided for the various
+costs across the 1000 data sets.
+
+\begin{table}[ht]
+{\footnotesize
+\caption{Number of DHI-participating herds, number of herds with shipment of
+  milk on August 1, 2015, and number of random samples drawn.\label{tab:dhi}} 
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+Province & DHI-participating herds & Herds with shipment of milk & Random samples added\tabularnewline
+\midrule
+New Brunswick & 140 & 206 & 66\tabularnewline
+Newfoundland \& Labrador & 6 & 32 & 26\tabularnewline
+Nova Scotia & 143 & 225 & 82\tabularnewline
+Prince Edward Island & 110 & 174 & 64\tabularnewline
+Québec & 4914 & 5766 & 852\tabularnewline
+Ontario & 2613 & 3834 & 1221\tabularnewline
+Manitoba & 197 & 299 & 102\tabularnewline
+Saskatchewan & 108 & 163 & 55\tabularnewline
+Alberta & 384 & 547 & 163\tabularnewline
+British Columbia & 287 & 437 & 150\tabularnewline\midrule
+Total & 8902 & 11683 & 2781\tabularnewline
+\bottomrule
+\end{tabular}\end{center}}
+\end{table}
+
+Data sets generation and computations were realized in \R\ 3.5.1~\cite{Rsystem}, and
+simulation code is available at \url{https://github.com/dhaine/CoMaCAN}.
+
+
+
+\section{Cost Computations Results --- DHI herds only}
+
+Applying the economic model to Canadian data.
+
+
+
+
+
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Total cost & CM cost & SCM cost \\ 
+  \hline
+2.5\% & 478615687 & 158465020 & 245729884 \\ 
+  50\% & 482802165 & 161571943 & 248213139 \\ 
+  97.5\% & 487290439 & 165265245 & 250864776 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Canada} 
+\label{tab:canada:overall}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Total cost (-10\% CM) & Total cost (-20\% CM) & Total cost (-10\% SCC) & Total cost (-20\% SCC) \\ 
+  \hline
+2.5\% & 470221483 & 461806369 & 460702325 & 437670860 \\ 
+  50\% & 474287139 & 465780922 & 464888804 & 441857339 \\ 
+  97.5\% & 478525758 & 469855871 & 469377078 & 446345613 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Canada --- Reduction} 
+\label{tab:canada:reduction}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Milk yield reduction (CM) & Milk yield reduction (SCM) & Discarded milk (CM) & Discarded milk (SCM) \\ 
+  \hline
+2.5\% & 56238082 & 161658931 & 14658605 & 7032946 \\ 
+  50\% & 57934959 & 161658931 & 15201712 & 7932317 \\ 
+  97.5\% & 59739351 & 161658931 & 15829790 & 8929689 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Canada --- Milk} 
+\label{tab:canada:a}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Labour & Product Quality & Prevention \\ 
+  \hline
+2.5\% & 7401305 & 13107140 & 72462009 \\ 
+  50\% & 7730879 & 13178467 & 73001363 \\ 
+  97.5\% & 8088751 & 13251238 & 73495115 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Canada --- Labour, Quality, Prevention} 
+\label{tab:canada:b}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Culling & Culling (CM) & Culling (SCM) \\ 
+  \hline
+2.5\% & 133626791 & 72859267 & 59770760 \\ 
+  50\% & 136891363 & 74909356 & 61932628 \\ 
+  97.5\% & 140153795 & 77301211 & 64390240 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Canada --- Culling and Mortality} 
+\label{tab:canada:c}
+\end{table}
+
+
+The median number of cows per herd is 71.4 (first
+and third quantiles: 37--81).
+\clearpage
+
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Total cost & CM cost & SCM cost \\ 
+  \hline
+2.5\% & 20300830 & 6765790 & 9799480 \\ 
+  50\% & 21100165 & 7419455 & 10294336 \\ 
+  97.5\% & 21974151 & 8132919 & 10802386 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Atlantic} 
+\label{tab:atlantic:overall}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Total cost (-10\% CM) & Total cost (-20\% CM) & Total cost (-10\% SCC) & Total cost (-20\% SCC) \\ 
+  \hline
+2.5\% & 19932326 & 19546192 & 19519180 & 18514202 \\ 
+  50\% & 20713864 & 20320783 & 20318515 & 19313537 \\ 
+  97.5\% & 21556702 & 21127159 & 21192501 & 20187523 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Atlantic --- Reduction} 
+\label{tab:atlantic:reduction}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Milk yield reduction (CM) & Milk yield reduction (SCM) & Discarded milk (CM) & Discarded milk (SCM) \\ 
+  \hline
+2.5\% & 2310414 & 6802084 & 585086 & 213253 \\ 
+  50\% & 2646002 & 6802084 & 692552 & 357348 \\ 
+  97.5\% & 2997653 & 6802084 & 822645 & 589487 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Atlantic --- Milk} 
+\label{tab:atlantic:a}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Labour & Product Quality & Prevention \\ 
+  \hline
+2.5\% & 291418 & 87532 & 3285523 \\ 
+  50\% & 355747 & 99420 & 3381501 \\ 
+  97.5\% & 429639 & 115116 & 3488968 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Atlantic --- Labour, Quality, Prevention} 
+\label{tab:atlantic:b}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Culling & Culling (CM) & Culling (SCM) \\ 
+  \hline
+2.5\% & 5680783 & 3041850 & 2439276 \\ 
+  50\% & 6318467 & 3452898 & 2866659 \\ 
+  97.5\% & 6972097 & 3937853 & 3349333 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Atlantic --- Culling and Mortality} 
+\label{tab:atlantic:c}
+\end{table}
+
+
+The median number of cows per herd in Atlantic provinces is
+73.8 (first and third quantiles:
+39--86).
+\clearpage
+
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Total cost & CM cost & SCM cost \\ 
+  \hline
+2.5\% & 227564040 & 72711192 & 119752214 \\ 
+  50\% & 229942454 & 74615679 & 121234042 \\ 
+  97.5\% & 232461809 & 76618773 & 122829583 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Québec} 
+\label{tab:quebec:overall}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Total cost (-10\% CM) & Total cost (-20\% CM) & Total cost (-10\% SCC) & Total cost (-20\% SCC) \\ 
+  \hline
+2.5\% & 223712247 & 219876638 & 219248362 & 208556776 \\ 
+  50\% & 226023979 & 222116792 & 221626776 & 210935190 \\ 
+  97.5\% & 228467936 & 224508301 & 224146131 & 213454545 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Québec --- Reduction} 
+\label{tab:quebec:reduction}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Milk yield reduction (CM) & Milk yield reduction (SCM) & Discarded milk (CM) & Discarded milk (SCM) \\ 
+  \hline
+2.5\% & 25637558 & 74791234 & 6668231 & 3155860 \\ 
+  50\% & 26589700 & 74791234 & 6975076 & 3640904 \\ 
+  97.5\% & 27517708 & 74791234 & 7308317 & 4181930 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Québec --- Milk} 
+\label{tab:quebec:a}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Labour & Product Quality & Prevention \\ 
+  \hline
+2.5\% & 3407144 & 12296839 & 33795970 \\ 
+  50\% & 3612060 & 12331651 & 34083305 \\ 
+  97.5\% & 3826494 & 12379302 & 34379014 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Québec --- Labour, Quality, Prevention} 
+\label{tab:quebec:b}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Culling & Culling (CM) & Culling (SCM) \\ 
+  \hline
+2.5\% & 61692811 & 33549798 & 27467343 \\ 
+  50\% & 63556172 & 34723111 & 28831675 \\ 
+  97.5\% & 65626835 & 36005572 & 30324772 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Québec --- Culling and Mortality} 
+\label{tab:quebec:c}
+\end{table}
+
+
+The median number of cows per herd in Québec is 60.4 (first
+and third quantiles: 35--71).
+\clearpage
+
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Total cost & CM cost & SCM cost \\ 
+  \hline
+2.5\% & 136551348 & 45116859 & 69362031 \\ 
+  50\% & 138599837 & 46768676 & 70603933 \\ 
+  97.5\% & 140907752 & 48554414 & 72106626 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Ontario} 
+\label{tab:ontario:overall}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Total cost (-10\% CM) & Total cost (-20\% CM) & Total cost (-10\% SCC) & Total cost (-20\% SCC) \\ 
+  \hline
+2.5\% & 134158624 & 131759979 & 131199510 & 124318576 \\ 
+  50\% & 136133342 & 133664090 & 133248000 & 126367065 \\ 
+  97.5\% & 138329081 & 135800621 & 135555915 & 128674981 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Ontario --- Reduction} 
+\label{tab:ontario:reduction}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Milk yield reduction (CM) & Milk yield reduction (SCM) & Discarded milk (CM) & Discarded milk (SCM) \\ 
+  \hline
+2.5\% & 15845157 & 49089057 & 4087638 & 1866018 \\ 
+  50\% & 16736882 & 49089057 & 4381925 & 2267392 \\ 
+  97.5\% & 17661554 & 49089057 & 4726987 & 2867958 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Ontario --- Milk} 
+\label{tab:ontario:a}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Labour & Product Quality & Prevention \\ 
+  \hline
+2.5\% & 2074262 & 212349 & 20912581 \\ 
+  50\% & 2246664 & 244632 & 21195727 \\ 
+  97.5\% & 2449636 & 290493 & 21499352 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Ontario --- Labour, Quality, Prevention} 
+\label{tab:ontario:b}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Culling & Culling (CM) & Culling (SCM) \\ 
+  \hline
+2.5\% & 38006683 & 20561301 & 16747744 \\ 
+  50\% & 39723192 & 21711073 & 17982878 \\ 
+  97.5\% & 41509979 & 22945318 & 19254444 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Ontario --- Culling and Mortality} 
+\label{tab:ontario:c}
+\end{table}
+
+
+The median number of cows per herd in Ontario is 70.7 (first and third quantiles: 39--78).
+\clearpage
+
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Total cost & CM cost & SCM cost \\ 
+  \hline
+2.5\% & 90729663 & 30787209 & 44546900 \\ 
+  50\% & 93048539 & 32702951 & 46041080 \\ 
+  97.5\% & 95756537 & 34776264 & 47474487 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- West} 
+\label{tab:west:overall}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Total cost (-10\% CM) & Total cost (-20\% CM) & Total cost (-10\% SCC) & Total cost (-20\% SCC) \\ 
+  \hline
+2.5\% & 89061976 & 87362577 & 87265467 & 82811501 \\ 
+  50\% & 91309505 & 89584082 & 89584343 & 85130377 \\ 
+  97.5\% & 93856193 & 92065183 & 92292341 & 87838375 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- West --- Reduction} 
+\label{tab:west:reduction}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Milk yield reduction (CM) & Milk yield reduction (SCM) & Discarded milk (CM) & Discarded milk (SCM) \\ 
+  \hline
+2.5\% & 10982487 & 30976557 & 2818292 & 1158219 \\ 
+  50\% & 11931420 & 30976557 & 3133463 & 1581951 \\ 
+  97.5\% & 13040962 & 30976557 & 3505510 & 2232133 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- West --- Milk} 
+\label{tab:west:a}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Labour & Product Quality & Prevention \\ 
+  \hline
+2.5\% & 1319965 & 463670 & 14048411 \\ 
+  50\% & 1512855 & 497860 & 14336951 \\ 
+  97.5\% & 1742906 & 544360 & 14643783 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- West --- Labour, Quality, Prevention} 
+\label{tab:west:b}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:01:54 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Culling & Culling (CM) & Culling (SCM) \\ 
+  \hline
+2.5\% & 25284166 & 13837467 & 10855583 \\ 
+  50\% & 27224505 & 14964960 & 12226780 \\ 
+  97.5\% & 29217540 & 16365630 & 13615915 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- West --- Culling and Mortality} 
+\label{tab:west:c}
+\end{table}
+
+
+The median number of cows per herd in Western provinces is
+128 (first and third quantiles:
+63--145).
+\clearpage
+
+\section{Cost Computations Results --- DHI and non-DHI herds}
+
+
+
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Total cost & CM cost & SCM cost \\ 
+  \hline
+2.5\% & 637278759 & 211806033 & 326418198 \\ 
+  50\% & 645781152 & 216939612 & 331055319 \\ 
+  97.5\% & 655298418 & 222890725 & 336262969 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Canada --- DHI and non-DHI herds} 
+\label{tab:canada2:overall}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Total cost (-10\% CM) & Total cost (-20\% CM) & Total cost (-10\% SCC) & Total cost (-20\% SCC) \\ 
+  \hline
+2.5\% & 626130231 & 614829903 & 613380546 & 582655886 \\ 
+  50\% & 634346730 & 622868487 & 621794978 & 590909584 \\ 
+  97.5\% & 643551372 & 631891924 & 631125790 & 599922568 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Canada --- Reduction --- DHI and non-DHI herds} 
+\label{tab:canada2:reduction}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Milk yield reduction (CM) & Milk yield reduction (SCM) & Discarded milk (CM) & Discarded milk (SCM) \\ 
+  \hline
+2.5\% & 75226732 & 214742849 & 19586450 & 9347114 \\ 
+  50\% & 77792401 & 216835318 & 20417245 & 10657932 \\ 
+  97.5\% & 80846127 & 219142307 & 21450639 & 12172111 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Canada --- Milk --- DHI and non-DHI herds} 
+\label{tab:canada2:a}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Labour & Product Quality & Prevention \\ 
+  \hline
+2.5\% & 9899434 & 15535257 & 96705894 \\ 
+  50\% & 10360008 & 15736036 & 97898694 \\ 
+  97.5\% & 10961517 & 15965761 & 99139800 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Canada --- Labour, Quality, Prevention --- DHI and non-DHI herds} 
+\label{tab:canada2:b}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Culling & Culling (CM) & Culling (SCM) \\ 
+  \hline
+2.5\% & 178494794 & 97290651 & 79665278 \\ 
+  50\% & 183720156 & 100578025 & 83124332 \\ 
+  97.5\% & 189197211 & 104347981 & 86828981 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Canada --- Culling and Mortality --- DHI and non-DHI herds} 
+\label{tab:canada2:c}
+\end{table}
+
+
+The median number of cows per herd is 73 (2.5
+and 97.5 quantiles: 72.3--73.7).
+\clearpage
+
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Total cost & CM cost & SCM cost \\ 
+  \hline
+2.5\% & 32506679 & 10955411 & 15754144 \\ 
+  50\% & 34496817 & 12146751 & 16786518 \\ 
+  97.5\% & 36922908 & 13698051 & 18106450 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Atlantic --- DHI and non-DHI herds} 
+\label{tab:atlantic2:overall}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Total cost (-10\% CM) & Total cost (-20\% CM) & Total cost (-10\% SCC) & Total cost (-20\% SCC) \\ 
+  \hline
+2.5\% & 31937686 & 31364894 & 31265676 & 29675503 \\ 
+  50\% & 33867896 & 33237077 & 33224332 & 31575104 \\ 
+  97.5\% & 36196476 & 35509229 & 35616926 & 33922458 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Atlantic --- Reduction --- DHI and non-DHI herds} 
+\label{tab:atlantic2:reduction}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Milk yield reduction (CM) & Milk yield reduction (SCM) & Discarded milk (CM) & Discarded milk (SCM) \\ 
+  \hline
+2.5\% & 3721068 & 10655423 & 925146 & 332976 \\ 
+  50\% & 4322845 & 11071311 & 1130429 & 573073 \\ 
+  97.5\% & 5177667 & 11534374 & 1398517 & 1075647 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Atlantic --- Milk --- DHI and non-DHI herds} 
+\label{tab:atlantic2:a}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Labour & Product Quality & Prevention \\ 
+  \hline
+2.5\% & 459030 & 130826 & 5261193 \\ 
+  50\% & 577438 & 158615 & 5538387 \\ 
+  97.5\% & 733558 & 196781 & 5841566 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Atlantic --- Labour, Quality, Prevention --- DHI and non-DHI herds} 
+\label{tab:atlantic2:b}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Culling & Culling (CM) & Culling (SCM) \\ 
+  \hline
+2.5\% & 9145883 & 4879683 & 3893756 \\ 
+  50\% & 10345216 & 5648202 & 4667610 \\ 
+  97.5\% & 11889239 & 6659704 & 5754190 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Atlantic --- Culling and Mortality --- DHI and non-DHI herds} 
+\label{tab:atlantic2:c}
+\end{table}
+
+
+The median number of cows per herd in Atlantic provinces is
+75.7 (2.5 and 97.5 percentiles:
+73--78.7).
+\clearpage
+
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Total cost & CM cost & SCM cost \\ 
+  \hline
+2.5\% & 266134159 & 85238082 & 140170383 \\ 
+  50\% & 269852514 & 87538788 & 142264999 \\ 
+  97.5\% & 273784126 & 90050993 & 144541220 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Québec --- DHI and non-DHI herds} 
+\label{tab:quebec2:overall}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Total cost (-10\% CM) & Total cost (-20\% CM) & Total cost (-10\% SCC) & Total cost (-20\% SCC) \\ 
+  \hline
+2.5\% & 261639844 & 257163990 & 256420378 & 243968862 \\ 
+  50\% & 265226158 & 260622692 & 260081761 & 247524037 \\ 
+  97.5\% & 269032032 & 264307346 & 263943723 & 251348444 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Québec --- Reduction --- DHI and non-DHI herds} 
+\label{tab:quebec2:reduction}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Milk yield reduction (CM) & Milk yield reduction (SCM) & Discarded milk (CM) & Discarded milk (SCM) \\ 
+  \hline
+2.5\% & 29914793 & 87102626 & 7788689 & 3658329 \\ 
+  50\% & 31201650 & 87742284 & 8190273 & 4280455 \\ 
+  97.5\% & 32387015 & 88547989 & 8586509 & 4927954 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Québec --- Milk --- DHI and non-DHI herds} 
+\label{tab:quebec2:a}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Labour & Product Quality & Prevention \\ 
+  \hline
+2.5\% & 3997743 & 14292882 & 39546457 \\ 
+  50\% & 4240277 & 14467092 & 39983072 \\ 
+  97.5\% & 4517423 & 14671331 & 40470285 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Québec --- Labour, Quality, Prevention --- DHI and non-DHI herds} 
+\label{tab:quebec2:b}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Culling & Culling (CM) & Culling (SCM) \\ 
+  \hline
+2.5\% & 72173750 & 39249285 & 32166927 \\ 
+  50\% & 74547917 & 40743805 & 33820036 \\ 
+  97.5\% & 77195548 & 42486005 & 35578139 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Québec --- Culling and Mortality --- DHI and non-DHI herds} 
+\label{tab:quebec2:c}
+\end{table}
+
+
+The median number of cows per herd in Québec is 60.4 (2.5 and 97.5 percentiles: 60--61).
+\clearpage
+
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Total cost & CM cost & SCM cost \\ 
+  \hline
+2.5\% & 198511899 & 65697105 & 101055218 \\ 
+  50\% & 203327212 & 68604406 & 103562410 \\ 
+  97.5\% & 208931002 & 72021923 & 106801781 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Ontario --- DHI and non-DHI herds} 
+\label{tab:ontario2:overall}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Total cost (-10\% CM) & Total cost (-20\% CM) & Total cost (-10\% SCC) & Total cost (-20\% SCC) \\ 
+  \hline
+2.5\% & 195040185 & 191522249 & 190750766 & 180772166 \\ 
+  50\% & 199721479 & 196122015 & 195474172 & 185384728 \\ 
+  97.5\% & 205157930 & 201401565 & 200921886 & 190680967 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- Ontario --- Reduction --- DHI and non-DHI herds} 
+\label{tab:ontario2:reduction}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Milk yield reduction (CM) & Milk yield reduction (SCM) & Discarded milk (CM) & Discarded milk (SCM) \\ 
+  \hline
+2.5\% & 23119071 & 70739785 & 5956126 & 2705604 \\ 
+  50\% & 24559959 & 72002466 & 6437799 & 3329140 \\ 
+  97.5\% & 26195157 & 73356271 & 7006076 & 4260147 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Ontario --- Milk --- DHI and non-DHI herds} 
+\label{tab:ontario2:a}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Labour & Product Quality & Prevention \\ 
+  \hline
+2.5\% & 3028378 & 307539 & 30411624 \\ 
+  50\% & 3288773 & 358951 & 31095671 \\ 
+  97.5\% & 3667895 & 432668 & 31858063 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Ontario --- Labour, Quality, Prevention --- DHI and non-DHI herds} 
+\label{tab:ontario2:b}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Culling & Culling (CM) & Culling (SCM) \\ 
+  \hline
+2.5\% & 55524262 & 29999188 & 24366732 \\ 
+  50\% & 58251872 & 31853840 & 26327722 \\ 
+  97.5\% & 61563686 & 34035123 & 28605310 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- Ontario --- Culling and Mortality --- DHI and non-DHI herds} 
+\label{tab:ontario2:c}
+\end{table}
+
+
+The median number of cows per herd in Ontario is 70.7 (2.5 and 97.5 percentiles: 69.4--72.1).
+\clearpage
+
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Total cost & CM cost & SCM cost \\ 
+  \hline
+2.5\% & 132587655 & 45348164 & 65395809 \\ 
+  50\% & 138009210 & 48474511 & 68225299 \\ 
+  97.5\% & 144159788 & 52313030 & 71704162 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- West --- DHI and non-DHI herds} 
+\label{tab:west2:overall}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Total cost (-10\% CM) & Total cost (-20\% CM) & Total cost (-10\% SCC) & Total cost (-20\% SCC) \\ 
+  \hline
+2.5\% & 130157409 & 127688614 & 127599850 & 121176134 \\ 
+  50\% & 135425898 & 132839254 & 132858330 & 126251158 \\ 
+  97.5\% & 141421192 & 138599153 & 138985504 & 132288338 \\ 
+   \hline
+\end{tabular}
+\caption{Overall Costs --- West --- Reduction --- DHI and non-DHI herds} 
+\label{tab:west2:reduction}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Milk yield reduction (CM) & Milk yield reduction (SCM) & Discarded milk (CM) & Discarded milk (SCM) \\ 
+  \hline
+2.5\% & 16099628 & 44574379 & 4147797 & 1665917 \\ 
+  50\% & 17661040 & 45965401 & 4623057 & 2338555 \\ 
+  97.5\% & 19732421 & 47515980 & 5323717 & 3402129 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- West --- Milk --- DHI and non-DHI herds} 
+\label{tab:west2:a}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Labour & Product Quality & Prevention \\ 
+  \hline
+2.5\% & 1933393 & 657065 & 20514950 \\ 
+  50\% & 2237082 & 739179 & 21229382 \\ 
+  97.5\% & 2666620 & 847785 & 22141851 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- West --- Labour, Quality, Prevention --- DHI and non-DHI herds} 
+\label{tab:west2:b}
+\end{table}
+% latex table generated in R 3.5.1 by xtable 1.8-2 package
+% Mon Jul 23 22:03:32 2018
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+ & Culling & Culling (CM) & Culling (SCM) \\ 
+  \hline
+2.5\% & 37183483 & 20075238 & 15908002 \\ 
+  50\% & 40303203 & 22163367 & 18089225 \\ 
+  97.5\% & 43872053 & 24613301 & 20548532 \\ 
+   \hline
+\end{tabular}
+\caption{Costs --- West --- Culling and Mortality --- DHI and non-DHI herds} 
+\label{tab:west2:c}
+\end{table}
+
+
+The median number of cows per herd in Western provinces is
+128.1 (2.5 and 97.5 percentiles:
+124.7--132.2).
+\clearpage
+
+
+
+%%==========================================================
+% Bibliography:
+\bibliographystyle{abbrvnat}
+\bibliography{bib/CoMaCAN}
+
+%%=========================================================
+
+\end{document}
+
+%%% Local Variables:
+%%% ispell-local-dictionary: "canadian"
+%%% eval: (flyspell-mode 1)
+%%% reftex-default-bibliography: ("bib/CoMaCAN.bib")
+%%% End:

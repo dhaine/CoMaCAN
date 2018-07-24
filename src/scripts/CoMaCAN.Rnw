@@ -1,0 +1,706 @@
+% Cost of Mastitis in Canada
+%% Author: Denis Haine
+%% Date: 20170502
+%% To compile:
+%%  Rscript -e "library(knitr); knit('file.Rnw')"
+%%  Rscript -e ``library(knitr); knit('file.Rnw', tangle = TRUE)''
+%%  pdflatex file.tex
+%%  bibtex file
+%%  pdflatex file.tex
+%%  pdflatex file.tex
+%%===============================================================
+\documentclass{article}
+\usepackage[square,numbers]{natbib}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french,english]{babel}
+\usepackage{graphicx}
+\usepackage{relsize}
+\usepackage{moreverb}
+\usepackage{fancyhdr}
+\usepackage{url}
+\usepackage{chngpage}
+\usepackage{microtype}
+\usepackage{xspace}
+\usepackage{lscape}
+\usepackage{booktabs}
+\usepackage{lastpage}
+\usepackage{paralist}
+\usepackage{siunitx}
+\usepackage{longtable}
+\usepackage{xfrac}
+\usepackage[super]{nth}  % to generate English ordinal numbers
+
+\def\titl{Cost of Mastitis in Canadian Dairies}
+\definecolor{myorange}{cmyk}{0,0.631,0.892,0.204}
+\definecolor{darkblue}{RGB}{0,0,139}
+\def\linkcol{darkblue}
+
+\usepackage[pdftex,hidelinks,bookmarks,pagebackref,pdfpagemode=UseOutlines,
+colorlinks,linkcolor=\linkcol,
+pdfauthor={Denis Haine},
+pdftitle={\titl}]{hyperref}
+
+\graphicspath{{graphics/}}
+
+\newcommand{\ra}[1]{\renewcommand{\arraystretch}{#1}}
+
+\newcommand{\code}[1]{\texttt{\smaller #1}}
+\newcommand{\R}{{\normalfont\textsf{R}}{}}
+
+\textwidth 6in
+\textheight 9in
+\topmargin -.5in
+\oddsidemargin -.1in
+\evensidemargin -.1in
+
+\newcommand{\st}{\textsuperscript{st}\xspace}
+\newcommand{\nd}{\textsuperscript{nd}\xspace}
+\newcommand{\rd}{\textsuperscript{rd}\xspace}
+\renewcommand{\th}{\textsuperscript{th}\xspace}
+
+\newcommand{\sq}{\textsuperscript{2}\xspace}
+
+\author{Denis Haine}
+\title{\textcolor{myorange}{\titl}}
+\date{\today}
+\pagestyle{fancy}
+\renewcommand{\subsectionmark}[1]{}  % suppress subsection title in headers
+
+\begin{document}
+\maketitle
+% \tableofcontents
+% \listoffigures
+\listoftables
+\clearpage
+\rhead{\scriptsize CoMaCAN \\
+  \today}
+
+<<setup1,echo=FALSE>>=
+# For more publication-ready graphics
+spar <- function(mar = if(!axes)
+                 c(2.25 + bot - .45*multi, 2 + left, .5 + top + .25*multi,
+                   .5+rt) else
+                 c(3.25 + bot - .45*multi, 3.5 + left, .5 + top + .25*multi,
+                   .5+rt),
+                 lwd = if(multi)1 else 1.75,
+                 mgp = if(!axes) mgp = c(.75, .1, 0) else
+                 if(multi) c(1.5, .365, 0) else c(2.4 - .4, 0.475, 0),
+                 tcl = if(multi)-0.25 else -0.4, xpd = FALSE,
+                 bot = 0, left = 0, top = 0, rt = 0, ps = if(multi) 14 else 10,
+                 mfrow = NULL, axes = TRUE, cex.lab = 1.25, cex.axis = 1.15,
+                 ...) {
+  multi <- length(mfrow) > 0
+  par(mar = mar, lwd = lwd, mgp = mgp, tcl = tcl, ps = ps, xpd = xpd,
+      cex.lab = cex.lab, cex.axis = cex.axis, ...)
+  if(multi) par(mfrow = mfrow)
+}
+
+knitrSet <- function(basename=NULL, w=4, h=3,
+                     fig.align='center', fig.show='hold', fig.pos='htbp',
+                     fig.lp=paste('fig', basename, sep=':'), dev='pdf',
+                     tidy=FALSE, error=FALSE,
+                     messages=c('messages.txt', 'console'),
+                     width=61, decinline=5, size=NULL,cache=FALSE,
+                     echo=TRUE,results='markup') {
+  messages <- match.arg(messages)
+  ## Specify e.g. dev=c('pdf','png') or dev=c('pdf','postscript')
+  ## to produce two graphics files for each plot
+  ## But: dev='CairoPNG' is preferred for png
+  if(length(basename)) basename <- paste(basename, '-', sep='')
+
+  options(width=width)
+  ## fills Sweavel boxes when font size is \small and svmono.cls
+  ## is in effect (use 65 without svmono)
+
+  render_listings()
+  if(messages != 'console') {
+	unlink(messages) # Start fresh with each run
+	hook_log = function(x, options) cat(x, file=messages, append=TRUE)
+	knit_hooks$set(warning = hook_log, message = hook_log)
+  }
+  else opts_chunk$set(message=FALSE, warning=FALSE)
+  if(length(size)) opts_chunk$set(size = size)
+
+  if(length(decinline)) {
+    rnd <- function(x, dec) if(!is.numeric(x)) x else round(x, dec)
+    formals(rnd) <- list(x=NULL, dec=decinline)
+    knit_hooks$set(inline = rnd)
+  }
+  knit_hooks$set(par=function(before, options, envir)
+                 if(before && options$fig.show != 'none') {
+                   p <- c('bty','mfrow','ps','bot','top','left','rt','lwd',
+                          'mgp','tcl', 'axes','xpd')
+                   pars <- opts_current$get(p)
+                   pars <- pars[!is.na(names(pars))]
+                   ## knitr 1.6 started returning NULLs for unspecified pars
+                   i <- sapply(pars, function(x) length(x) > 0)
+                   if(any(i)) do.call('spar', pars[i]) else spar()
+#                   if(length(pars)) do.call('spar', pars) else spar()
+                 })
+  opts_knit$set(
+    aliases=c(h='fig.height', w='fig.width', cap='fig.cap', scap='fig.scap'))
+    #eval.after = c('fig.cap','fig.scap'),
+    #error=error)  #, keep.source=keep.source (TRUE))
+  opts_chunk$set(fig.path=paste('graphics/pdf/', basename, sep=''),
+                 fig.align=fig.align, w=w, h=h,
+                 fig.show=fig.show, fig.lp=fig.lp, fig.pos=fig.pos,
+                 dev=dev, par=TRUE, tidy=tidy, out.width=NULL, cache=cache,
+                 echo=echo, results=results, error=error)
+  hook_chunk = knit_hooks$get('chunk')
+  ## centering will not allow too-wide figures to go into left margin
+  knit_hooks$set(chunk = function(x, options) { 
+    res = hook_chunk(x, options) 
+    if (options$fig.align != 'center') return(res) 
+    gsub('\\{\\\\centering (\\\\includegraphics.+)\n\n\\}', 
+         '\\\\centerline{\\1}', res) 
+  }) 
+}
+## see http://yihui.name/knitr/options#package_options
+
+## Use caption package options to control caption font size
+
+## Function to layout multiple lattice graphs into a 2x2 matrix
+pmlattice <- function(..., nc=2) {
+  w <- list(...)
+  if(!inherits(w[[1]], 'trellis')) w <- w[[1]]
+  n <- length(w)
+  nr <- ceiling(n / nc)
+  row <- 1
+  col <- 0
+  for(i in 1 : n) {
+    col <- col + 1
+    if(col > nc) {
+      col <- 1
+      row <- row + 1
+    }
+    print(w[[i]], more=i < n, split=c(col, row,  nc, nr))
+  }
+}
+@
+
+<<setup2,echo=FALSE,results='asis'>>=
+echo <- TRUE # include code in report
+# echo <- FALSE # exclude code in report
+cat('%------------------\n')
+cat(sprintf('\\def\\inclcode{%s}\n', 1 * echo))
+knitrSet()
+knitrSet('master', echo = echo)
+@ 
+
+\section{Material \& Methods}
+
+A cross-sectional study, described in \citet{aghamohammadi_2018}, was conducted
+to collect data on factors having an impact on mastitis costs (current expenditures
+for mastitis treatment and control, and mastitis-associated output losses).
+Data were collected with the help of a questionnaire consisting of 35 open-ended
+and multiple-choice questions, mailed in January 2016 to the 374 dairy producers
+participating in the second phase of the Canadian National Dairy
+Study~\cite{BELAGE20173839}.
+The 374 farms were selected to reflect the proportion of producers by province
+and of DHI-participating herds according to the official records from the
+provincial dairy boards (British Columbia, n = 20; Alberta, n = 20;
+Saskatchewan, n = 10; Manitoba, n = 10; Ontario, n = 133; Québec, n = 121;
+New-Brunswick, n = 17, Nova-Scotia, n = 18; Prince Edward Island, n = 20, and
+Newfoundland; n = 5).
+More details can be found in \citet{aghamohammadi_2018}, along with the mastitis
+economic model used, based on the framework proposed by \citet{Halasa_2007}.
+
+Based on data collected from these 374 herds, probability distributions of the
+various economic model parameters were fit by maximum likelihood
+estimation~\cite{JSSv064i04}.
+Empirical plots, descriptive statistics, as well as skewness and kurtosis
+plots (i.e.\ Cullen and Frey graph, \citealp{Cullen_Frey_1999}) were used to
+determine the best distributions for each parameter.
+In order to take into account the uncertainty of the estimated values of
+kurtosis and skewness from data, a nonparametric bootstrap
+procedure~\cite{Efron_Tibshirani_1994} was performed to obtain boot values of
+skewness and kurtosis.
+List of parameters and fitted distributions are given in Table~\ref{tab:fitted}.
+
+\begin{table}[ht]
+{\footnotesize
+\caption{Fitted distribution for economic model parameters.\label{tab:fitted}} 
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Parameter & Distribution & Parameters\tabularnewline
+\midrule
+Milk samples cost for SCM & Gamma & Shape = 0.1; rate = 0.0004 \tabularnewline
+Incidence of CM & Exponential & Rate = 0.04 \tabularnewline
+Proportion of CM receiving treatment & Beta & \(\alpha\) = 0.44; \(\beta\) = 0.18 \tabularnewline
+Drug price & Gamma & Shape = 3.27; rate = 0.13 \tabularnewline
+Proportion of clinical mastitis seen by a vet & Beta & \(\alpha\) = 0.2; \(\beta\) = 3.47 \tabularnewline
+Veterinary fees for CM & Log-normal & \(\mu\) = 4.6; \(\sigma\) = 0.41 \tabularnewline
+Labour time per CM case & Gamma & Shape = 0.15; rate = 0.8 \tabularnewline
+Milk samples cost for CM & Gamma & Shape = 0.24; rate = 0.001 \tabularnewline
+Cost of veterinary advices (udder health) & Gamma & Shape = 0.06; rate = 0.0002 \tabularnewline
+Insurance & Gamma & Shape = 0.12; rate = 0.0009 \tabularnewline
+Proportion of L1 culled due to CM & Beta & \(\alpha\) = 0.22; \(\beta\) = 15.6 \tabularnewline
+Proportion of L1 dead due to CM & Beta & \(\alpha\) = 0.05; \(\beta\) = 20 \tabularnewline
+Proportion of L2+ culled due to CM & Beta & \(\alpha\) = 0.83; \(\beta\) = 17.5 \tabularnewline
+Proportion of L2+ dead due to CM & Beta & \(\alpha\) = 0.26; \(\beta\) = 46.4 \tabularnewline
+Rearing costs & Normal & Mean = 2450; SD = 450 \tabularnewline
+Meat value for CM & Logistic & Location = 1109; scale = 165 \tabularnewline
+Salvage value & Gamma & Shape = 0.25; rate = 0.01 \tabularnewline
+Proportion of L1 culled due to SCM & Beta & \(\alpha\) = 0.21; \(\beta\) = 15 \tabularnewline
+Proportion of L2+ culled due to SCM & Beta & \(\alpha\) = 0.93; \(\beta\) = 19 \tabularnewline
+Meat value for SCC & Log-normal & \(\mu\) = 6.8; \(\sigma\) = 1.3 \tabularnewline
+Pre-milking teat disinfection cost & Exponential & Rate = 0.0008 \tabularnewline
+Post-milking teat disinfection cost & Gamma & Shape = 1.79; rate = 0.0009 \tabularnewline
+DCT cost & Gamma & Shape = 1.12; rate = 0.0006 \tabularnewline
+Gloves cost & Exponential & Rate = 0.004 \tabularnewline 
+Vaccines cost & Gamma & Shape = 0.26; rate = 0.0006 \tabularnewline
+Treatment time & Gamma & Shape = 5.9; rate = 1.82 \tabularnewline
+Drug withdrawal time & Normal & Mean = 3.2; SD = 0.6 \tabularnewline
+Proportion of cows excluded from bulktank due to high SCC & Beta & \(\alpha\) = 0.17; \(\beta\) = 2.21 \tabularnewline
+Number of days before milk is put back in milk tank & Gamma & Shape = 0.6; rate = 0.23 \tabularnewline
+Proportion of milk fed to calves & Beta & \(\alpha\) = 0.17; \(\beta\) = 0.26 \tabularnewline
+Number of days out of bulktank due to SCM & Negative binomial & Size = 0.19; \(\mu\) = 30.26 \tabularnewline
+\bottomrule
+\end{tabular}\end{center}}
+\end{table}
+
+The economic model described in \cite{aghamohammadi_2018} was applied to 2014
+data of DHI-participating herds (N = 8902), with the parameters and their fitted
+distributions.
+A total of 1000 data sets were simulated.
+For each data set, a stratified random sampling without replacement was used to
+fill data for herds not participating into DHI, i.e. for which no data were
+available.
+Number of participating and non-participating DHI herds are given in
+Table~\ref{tab:dhi}, together with the random samples added.
+Median values, 2.5 and 97.5 percentiles are then provided for the various
+costs across the 1000 data sets.
+
+\begin{table}[ht]
+{\footnotesize
+\caption{Number of DHI-participating herds, number of herds with shipment of
+  milk on August 1, 2015, and number of random samples drawn.\label{tab:dhi}} 
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+Province & DHI-participating herds & Herds with shipment of milk & Random samples added\tabularnewline
+\midrule
+New Brunswick & 140 & 206 & 66\tabularnewline
+Newfoundland \& Labrador & 6 & 32 & 26\tabularnewline
+Nova Scotia & 143 & 225 & 82\tabularnewline
+Prince Edward Island & 110 & 174 & 64\tabularnewline
+Québec & 4914 & 5766 & 852\tabularnewline
+Ontario & 2613 & 3834 & 1221\tabularnewline
+Manitoba & 197 & 299 & 102\tabularnewline
+Saskatchewan & 108 & 163 & 55\tabularnewline
+Alberta & 384 & 547 & 163\tabularnewline
+British Columbia & 287 & 437 & 150\tabularnewline\midrule
+Total & 8902 & 11683 & 2781\tabularnewline
+\bottomrule
+\end{tabular}\end{center}}
+\end{table}
+
+Data sets generation and computations were realized in \R\ 3.5.1~\cite{Rsystem}, and
+simulation code is available at \url{https://github.com/dhaine/CoMaCAN}.
+
+<<load-data1,echo=FALSE,results='hide',fig.keep='none'>>=
+library(tidyverse)
+library(xtable)
+rsession <- sessionInfo()
+rmm <- paste(rsession$R.version$major, rsession$R.version$minor, sep = ".")
+
+dat <- readRDS("dat.rds")
+@
+
+\section{Cost Computations Results --- DHI herds only}
+
+Applying the economic model to Canadian data.
+
+<<compute-cost1,echo=FALSE>>=
+source("../lib/compute_cost.R")
+@ 
+
+<<colnames,echo=FALSE>>=
+tab_colnames <- c("Total cost", "CM cost", "SCM cost",
+                  "Milk yield reduction (CM)", "Milk yield reduction (SCM)", "Drug",
+                  "Discarded milk (CM)", "Discarded milk (SCM)", "Vet services",
+                  "Vet services (CM)", "Vet services (SCM)", "Labour",
+                  "Product Quality", "Diagnostic", "Diagnostic (CM)",
+                  "Diagnostic (SCM)", "Culling", "Culling (CM)",
+                  "Culling (SCM)", "Prevention", "Total cost (-10% CM)",
+                  "Total cost (-20% CM)", "Total cost (-10% SCC)",
+                  "Total cost (-20% SCC)", "Cow cost (total)", "Cow cost (CM)",
+                  "Cow cost (SCM)", "N cows (median)", "N cows (25th)", "N cows (75th)")
+@ 
+
+<<canada1,echo=FALSE,results='asis'>>=
+##----canada--------------------------------------------------------------------
+can_cost <- lapply(dat, compute_cost)
+can_output <- do.call(rbind, can_cost)
+
+##---quebec--------------------------------------------------------------------
+quebec_subset <- lapply(dat, function(x) x[x[, "province"]==5,])
+quebec_cost <- lapply(quebec_subset, compute_cost)
+quebec_output <- do.call(rbind, quebec_cost)
+
+##---ontario-------------------------------------------------------------------
+ontario_subset <- lapply(dat, function(x) x[x[, "province"]==6,])
+ontario_cost <- lapply(ontario_subset, compute_cost)
+ontario_output <- do.call(rbind, ontario_cost)
+
+##---west----------------------------------------------------------------------
+west_subset <- lapply(dat, function(x) x[x[, "province"]>6,])
+west_cost <- lapply(west_subset, compute_cost)
+west_output <- do.call(rbind, west_cost)
+
+##---atlantic------------------------------------------------------------------
+atlantic_subset <- lapply(dat, function(x) x[x[, "province"]<5,])
+atlantic_cost <- lapply(atlantic_subset, compute_cost)
+atlantic_output <- do.call(rbind, atlantic_cost)
+
+can_table <- apply(can_output, 2, function(x) quantile(x, c(0.025, 0.5, 0.975)))
+colnames(can_table) <- tab_colnames
+xtable(can_table[, 1:3], label = "tab:canada:overall",
+       caption = "Overall Costs --- Canada",
+       booktabs = TRUE, digits = 0)
+xtable(can_table[, 21:24], label = "tab:canada:reduction",
+       caption = "Overall Costs --- Canada --- Reduction",
+       booktabs = TRUE, digits = 0, sanitize.text.function = function(x){x})
+xtable(can_table[, c(4:5, 7:8)], label = "tab:canada:a",
+       caption = "Costs --- Canada --- Milk",
+       booktabs = TRUE, digits = 0)
+xtable(can_table[, c(12:13, 20)], label = "tab:canada:b",
+       caption = "Costs --- Canada --- Labour, Quality, Prevention",
+       booktabs = TRUE, digits = 0)
+xtable(can_table[, 17:19], label = "tab:canada:c",
+       caption = "Costs --- Canada --- Culling and Mortality",
+       booktabs = TRUE, digits = 0)
+@
+
+The median number of cows per herd is \Sexpr{round(can_table[2, 28], 1)} (first
+and third quantiles: \Sexpr{round(can_table[2, 29],
+  1)}--\Sexpr{round(can_table[2, 30], 1)}).
+\clearpage
+
+<<atlantic1,echo=FALSE,results='asis'>>=
+atlantic_table <- apply(atlantic_output, 2,
+                        function(x) quantile(x, c(0.025, 0.5, 0.975)))
+colnames(atlantic_table) <- tab_colnames
+xtable(atlantic_table[, 1:3], label = "tab:atlantic:overall",
+       caption = "Overall Costs --- Atlantic",
+       booktabs = TRUE, digits = 0)
+xtable(atlantic_table[, 21:24], label = "tab:atlantic:reduction",
+       caption = "Overall Costs --- Atlantic --- Reduction",
+       booktabs = TRUE, digits = 0, sanitize.text.function = function(x){x})
+xtable(atlantic_table[, c(4:5, 7:8)], label = "tab:atlantic:a",
+       caption = "Costs --- Atlantic --- Milk",
+       booktabs = TRUE, digits = 0)
+xtable(atlantic_table[, c(12:13, 20)], label = "tab:atlantic:b",
+       caption = "Costs --- Atlantic --- Labour, Quality, Prevention",
+       booktabs = TRUE, digits = 0)
+xtable(atlantic_table[, 17:19], label = "tab:atlantic:c",
+       caption = "Costs --- Atlantic --- Culling and Mortality",
+       booktabs = TRUE, digits = 0)
+@
+
+The median number of cows per herd in Atlantic provinces is
+\Sexpr{round(atlantic_table[2, 28], 1)} (first and third quantiles:
+\Sexpr{round(atlantic_table[2, 29],   1)}--\Sexpr{round(atlantic_table[2, 30],
+  1)}).
+\clearpage
+
+<<quebec1,echo=FALSE,results='asis'>>=
+quebec_table <- apply(quebec_output, 2, function(x) quantile(x, c(0.025, 0.5, 0.975)))
+colnames(quebec_table) <- tab_colnames
+xtable(quebec_table[, 1:3], label = "tab:quebec:overall",
+       caption = "Overall Costs --- Québec",
+       booktabs = TRUE, digits = 0)
+xtable(quebec_table[, 21:24], label = "tab:quebec:reduction",
+       caption = "Overall Costs --- Québec --- Reduction",
+       booktabs = TRUE, digits = 0, sanitize.text.function = function(x){x})
+xtable(quebec_table[, c(4:5, 7:8)], label = "tab:quebec:a",
+       caption = "Costs --- Québec --- Milk",
+       booktabs = TRUE, digits = 0)
+xtable(quebec_table[, c(12:13, 20)], label = "tab:quebec:b",
+       caption = "Costs --- Québec --- Labour, Quality, Prevention",
+       booktabs = TRUE, digits = 0)
+xtable(quebec_table[, 17:19], label = "tab:quebec:c",
+       caption = "Costs --- Québec --- Culling and Mortality",
+       booktabs = TRUE, digits = 0)
+@
+
+The median number of cows per herd in Québec is \Sexpr{round(quebec_table[2, 28], 1)} (first
+and third quantiles: \Sexpr{round(quebec_table[2, 29],
+  1)}--\Sexpr{round(quebec_table[2, 30], 1)}).
+\clearpage
+
+<<ontario1,echo=FALSE,results='asis'>>=
+ontario_table <- apply(ontario_output, 2,
+                        function(x) quantile(x, c(0.025, 0.5, 0.975)))
+colnames(ontario_table) <- tab_colnames
+xtable(ontario_table[, 1:3], label = "tab:ontario:overall",
+       caption = "Overall Costs --- Ontario",
+       booktabs = TRUE, digits = 0)
+xtable(ontario_table[, 21:24], label = "tab:ontario:reduction",
+       caption = "Overall Costs --- Ontario --- Reduction",
+       booktabs = TRUE, digits = 0, sanitize.text.function = function(x){x})
+xtable(ontario_table[, c(4:5, 7:8)], label = "tab:ontario:a",
+       caption = "Costs --- Ontario --- Milk",
+       booktabs = TRUE, digits = 0)
+xtable(ontario_table[, c(12:13, 20)], label = "tab:ontario:b",
+       caption = "Costs --- Ontario --- Labour, Quality, Prevention",
+       booktabs = TRUE, digits = 0)
+xtable(ontario_table[, 17:19], label = "tab:ontario:c",
+       caption = "Costs --- Ontario --- Culling and Mortality",
+       booktabs = TRUE, digits = 0)
+@
+
+The median number of cows per herd in Ontario is \Sexpr{round(ontario_table[2,
+  28], 1)} (first and third quantiles: \Sexpr{round(ontario_table[2, 29],
+  1)}--\Sexpr{round(ontario_table[2, 30], 1)}).
+\clearpage
+
+<<west1,echo=FALSE,results='asis'>>=
+west_table <- apply(west_output, 2,
+                        function(x) quantile(x, c(0.025, 0.5, 0.975)))
+colnames(west_table) <- tab_colnames
+xtable(west_table[, 1:3], label = "tab:west:overall",
+       caption = "Overall Costs --- West",
+       booktabs = TRUE, digits = 0)
+xtable(west_table[, 21:24], label = "tab:west:reduction",
+       caption = "Overall Costs --- West --- Reduction",
+       booktabs = TRUE, digits = 0, sanitize.text.function = function(x){x})
+xtable(west_table[, c(4:5, 7:8)], label = "tab:west:a",
+       caption = "Costs --- West --- Milk",
+       booktabs = TRUE, digits = 0)
+xtable(west_table[, c(12:13, 20)], label = "tab:west:b",
+       caption = "Costs --- West --- Labour, Quality, Prevention",
+       booktabs = TRUE, digits = 0)
+xtable(west_table[, 17:19], label = "tab:west:c",
+       caption = "Costs --- West --- Culling and Mortality",
+       booktabs = TRUE, digits = 0)
+@
+
+The median number of cows per herd in Western provinces is
+\Sexpr{round(west_table[2, 28], 1)} (first and third quantiles:
+\Sexpr{round(west_table[2, 29], 1)}--\Sexpr{round(west_table[2, 30], 1)}).
+\clearpage
+
+\section{Cost Computations Results --- DHI and non-DHI herds}
+
+<<load-data2,echo=FALSE,results='hide',fig.keep='none'>>=
+rm(dat)
+dat_dhi <- readRDS("dat_dhi.rds")
+@
+
+<<canada2,echo=FALSE,results='asis'>>=
+##----canada--------------------------------------------------------------------
+can_cost <- lapply(dat_dhi, compute_cost)
+can_output <- do.call(rbind, can_cost)
+
+##---quebec--------------------------------------------------------------------
+quebec_subset <- lapply(dat_dhi, function(x) x[x[, "province"]==5,])
+quebec_cost <- lapply(quebec_subset, compute_cost)
+quebec_output <- do.call(rbind, quebec_cost)
+
+##---ontario-------------------------------------------------------------------
+ontario_subset <- lapply(dat_dhi, function(x) x[x[, "province"]==6,])
+ontario_cost <- lapply(ontario_subset, compute_cost)
+ontario_output <- do.call(rbind, ontario_cost)
+
+##---west----------------------------------------------------------------------
+west_subset <- lapply(dat_dhi, function(x) x[x[, "province"]>6,])
+west_cost <- lapply(west_subset, compute_cost)
+west_output <- do.call(rbind, west_cost)
+
+##---atlantic------------------------------------------------------------------
+atlantic_subset <- lapply(dat_dhi, function(x) x[x[, "province"]<5,])
+atlantic_cost <- lapply(atlantic_subset, compute_cost)
+atlantic_output <- do.call(rbind, atlantic_cost)
+
+can_table <- apply(can_output, 2, function(x) quantile(x, c(0.025, 0.5, 0.975)))
+colnames(can_table) <- tab_colnames
+xtable(can_table[, 1:3], label = "tab:canada2:overall",
+       caption = "Overall Costs --- Canada --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+xtable(can_table[, 21:24], label = "tab:canada2:reduction",
+       caption = "Overall Costs --- Canada --- Reduction --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0, sanitize.text.function = function(x){x})
+xtable(can_table[, c(4:5, 7:8)], label = "tab:canada2:a",
+       caption = "Costs --- Canada --- Milk --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+xtable(can_table[, c(12:13, 20)], label = "tab:canada2:b",
+       caption = "Costs --- Canada --- Labour, Quality, Prevention --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+xtable(can_table[, 17:19], label = "tab:canada2:c",
+       caption = "Costs --- Canada --- Culling and Mortality --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+@
+
+The median number of cows per herd is \Sexpr{round(can_table[2, 28], 1)} (2.5
+and 97.5 quantiles: \Sexpr{round(can_table[1, 28],
+  1)}--\Sexpr{round(can_table[3, 28], 1)}).
+\clearpage
+
+<<atlantic2,echo=FALSE,results='asis'>>=
+atlantic_table <- apply(atlantic_output, 2,
+                        function(x) quantile(x, c(0.025, 0.5, 0.975)))
+colnames(atlantic_table) <- tab_colnames
+xtable(atlantic_table[, 1:3], label = "tab:atlantic2:overall",
+       caption = "Overall Costs --- Atlantic --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+xtable(atlantic_table[, 21:24], label = "tab:atlantic2:reduction",
+       caption = "Overall Costs --- Atlantic --- Reduction --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0, sanitize.text.function = function(x){x})
+xtable(atlantic_table[, c(4:5, 7:8)], label = "tab:atlantic2:a",
+       caption = "Costs --- Atlantic --- Milk --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+xtable(atlantic_table[, c(12:13, 20)], label = "tab:atlantic2:b",
+       caption = "Costs --- Atlantic --- Labour, Quality, Prevention --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+xtable(atlantic_table[, 17:19], label = "tab:atlantic2:c",
+       caption = "Costs --- Atlantic --- Culling and Mortality --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+@
+
+The median number of cows per herd in Atlantic provinces is
+\Sexpr{round(atlantic_table[2, 28], 1)} (2.5 and 97.5 percentiles:
+\Sexpr{round(atlantic_table[1, 28], 1)}--\Sexpr{round(atlantic_table[3, 28], 1)}).
+\clearpage
+
+<<quebec2,echo=FALSE,results='asis'>>=
+quebec_table <- apply(quebec_output, 2, function(x) quantile(x, c(0.025, 0.5, 0.975)))
+colnames(quebec_table) <- tab_colnames
+xtable(quebec_table[, 1:3], label = "tab:quebec2:overall",
+       caption = "Overall Costs --- Québec --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+xtable(quebec_table[, 21:24], label = "tab:quebec2:reduction",
+       caption = "Overall Costs --- Québec --- Reduction --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0, sanitize.text.function = function(x){x})
+xtable(quebec_table[, c(4:5, 7:8)], label = "tab:quebec2:a",
+       caption = "Costs --- Québec --- Milk --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+xtable(quebec_table[, c(12:13, 20)], label = "tab:quebec2:b",
+       caption = "Costs --- Québec --- Labour, Quality, Prevention --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+xtable(quebec_table[, 17:19], label = "tab:quebec2:c",
+       caption = "Costs --- Québec --- Culling and Mortality --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+@
+
+The median number of cows per herd in Québec is \Sexpr{round(quebec_table[2,
+  28], 1)} (2.5 and 97.5 percentiles: \Sexpr{round(quebec_table[1, 28],
+  1)}--\Sexpr{round(quebec_table[3, 28], 1)}).
+\clearpage
+
+<<ontario2,echo=FALSE,results='asis'>>=
+ontario_table <- apply(ontario_output, 2,
+                        function(x) quantile(x, c(0.025, 0.5, 0.975)))
+colnames(ontario_table) <- tab_colnames
+xtable(ontario_table[, 1:3], label = "tab:ontario2:overall",
+       caption = "Overall Costs --- Ontario --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+xtable(ontario_table[, 21:24], label = "tab:ontario2:reduction",
+       caption = "Overall Costs --- Ontario --- Reduction --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0, sanitize.text.function = function(x){x})
+xtable(ontario_table[, c(4:5, 7:8)], label = "tab:ontario2:a",
+       caption = "Costs --- Ontario --- Milk --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+xtable(ontario_table[, c(12:13, 20)], label = "tab:ontario2:b",
+       caption = "Costs --- Ontario --- Labour, Quality, Prevention --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+xtable(ontario_table[, 17:19], label = "tab:ontario2:c",
+       caption = "Costs --- Ontario --- Culling and Mortality --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+@
+
+The median number of cows per herd in Ontario is \Sexpr{round(ontario_table[2,
+  28], 1)} (2.5 and 97.5 percentiles: \Sexpr{round(ontario_table[1, 28],
+  1)}--\Sexpr{round(ontario_table[3, 28], 1)}).
+\clearpage
+
+<<west2,echo=FALSE,results='asis'>>=
+west_table <- apply(west_output, 2,
+                        function(x) quantile(x, c(0.025, 0.5, 0.975)))
+colnames(west_table) <- tab_colnames
+xtable(west_table[, 1:3], label = "tab:west2:overall",
+       caption = "Overall Costs --- West --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+xtable(west_table[, 21:24], label = "tab:west2:reduction",
+       caption = "Overall Costs --- West --- Reduction --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0, sanitize.text.function = function(x){x})
+xtable(west_table[, c(4:5, 7:8)], label = "tab:west2:a",
+       caption = "Costs --- West --- Milk --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+xtable(west_table[, c(12:13, 20)], label = "tab:west2:b",
+       caption = "Costs --- West --- Labour, Quality, Prevention --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+xtable(west_table[, 17:19], label = "tab:west2:c",
+       caption = "Costs --- West --- Culling and Mortality --- DHI and non-DHI herds",
+       booktabs = TRUE, digits = 0)
+@
+
+The median number of cows per herd in Western provinces is
+\Sexpr{round(west_table[2, 28], 1)} (2.5 and 97.5 percentiles:
+\Sexpr{round(west_table[1, 28], 1)}--\Sexpr{round(west_table[3, 28], 1)}).
+\clearpage
+
+<<plot_data,echo=FALSE,results='hide'>>=
+## data to draw plots for paper
+atlantic <- as.tibble(atlantic_table)
+atlantic$qtl <- c("first", "median", "third")
+atlantic$province <- "Atlantic"
+atlantic <- subset(atlantic, select = -c(`N cows (25th)`, `N cows (75th)`))
+atlantic <- gather(atlantic, variable, val, -(qtl:province), na.rm = TRUE) %>%
+    spread(qtl, val)
+quebec <- as.tibble(quebec_table)
+quebec$qtl <- c("first", "median", "third")
+quebec$province <- "Quebec"
+quebec <- subset(quebec, select = -c(`N cows (25th)`, `N cows (75th)`))
+quebec <- gather(quebec, variable, val, -(qtl:province), na.rm = TRUE) %>%
+    spread(qtl, val)
+ontario <- as.tibble(ontario_table)
+ontario$qtl <- c("first", "median", "third")
+ontario$province <- "Ontario"
+ontario <- subset(ontario, select = -c(`N cows (25th)`, `N cows (75th)`))
+ontario <- gather(ontario, variable, val, -(qtl:province), na.rm = TRUE) %>%
+    spread(qtl, val)
+west <- as.tibble(west_table)
+west$qtl <- c("first", "median", "third")
+west$province <- "West"
+west <- subset(west, select = -c(`N cows (25th)`, `N cows (75th)`))
+west <- gather(west, variable, val, -(qtl:province), na.rm = TRUE) %>%
+    spread(qtl, val)
+canada_cost <- rbind(atlantic, quebec, ontario, west)
+
+saveRDS(canada_cost, "canada_cost.rds")
+
+n_herd <- as.data.frame(table(dat_dhi[[1]][, 13]))
+names(n_herd) <- c("province", "n_herd")
+n_herd$province <- with(n_herd,
+                        ifelse(province == 1, "New Brunswick",
+                        ifelse(province == 2, "New Foundland and Labrador",
+                        ifelse(province == 3, "Nova Scotia",
+                        ifelse(province == 4, "Prince Edward Island",
+                        ifelse(province == 5, "Quebec",
+                        ifelse(province == 6, "Ontario",
+                        ifelse(province == 7, "Manitoba",
+                        ifelse(province == 8, "Saskatchewan",
+                        ifelse(province == 9, "Alberta", "British Columbia"))))))))))
+
+saveRDS(n_herd, "n_herd.rds")
+rm(list = setdiff(ls(), c("spar", "knitrSet", "pmlattice")))
+gc()
+@ 
+
+%%==========================================================
+% Bibliography:
+\bibliographystyle{abbrvnat}
+\bibliography{bib/CoMaCAN}
+
+%%=========================================================
+
+\end{document}
+
+%%% Local Variables:
+%%% ispell-local-dictionary: "canadian"
+%%% eval: (flyspell-mode 1)
+%%% reftex-default-bibliography: ("bib/CoMaCAN.bib")
+%%% End:
