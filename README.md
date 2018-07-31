@@ -59,8 +59,13 @@ costs across the 1000 data sets.
 ## Instructions
 * `01-load_data.R`: load data
 * `02-make_data.R`: create simulated data sets. It uses `stratified.R` to add
-  stratified random samples to the data sets.
+  stratified random samples to the data sets. The data sets are a list of 1,000
+  data frames.
 * `fit_distribution.R`: define the fitted distributions of the model parameters.
 * `CoMaCAN.Rnw`: run analyses and create stat report (LaTeX and pdf files).
   Costs are computed with `compute_cost.R`.
 * `plotting.R`: creates plot for paper.
+
+## Plots
+
+![Total costs](./src/scripts/total_cost.png)
