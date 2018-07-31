@@ -69,3 +69,13 @@ costs across the 1000 data sets.
 ## Plots
 
 ![Total costs](./src/scripts/total_cost.png)
+
+![Cow costs](./src/scripts/cow_cost.png)
+
+![Costs components](./src/scripts/comp_cost.png)
+
+![Cows per herd](./src/scripts/n_cow.png)
+
+![Cost components for clinical mastitis](./src/scripts/compCM_cost.png)
+
+![Cost components for subclinical mastitis](./src/scripts/compSCM_cost.png)
