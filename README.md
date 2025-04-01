@@ -1,5 +1,7 @@
 # COst of MAstitis in CANadian Dairies (CoMaCAN)
 
+[![Project Status: Moved to http://codeberg.org/dhaine/CoMaCAN – The project has been moved to a new location, and the version at that location should be considered authoritative.](https://www.repostatus.org/badges/latest/moved.svg)](https://www.repostatus.org/#moved) to [http://codeberg.org/dhaine/CoMaCAN](http://codeberg.org/dhaine/CoMaCAN)
+
 * Réseau canadien de recherche sur la mammite bovine et la qualité du lait,
   Faculté de médecine vétérinaire, Université de Montréal
 * PI: Simon Dufour (simon.dufour@umontreal.ca)
